@@ -1,26 +1,35 @@
-table Table1 {
+struct Struct1 {
+  unk_data:[ubyte:12];
+}
+
+table Table2 {
   prop0:uint;
 }
-table Table2 {
+
+struct Struct3 {
+  unk_data:[ubyte:12];
+}
+
+table Table4 {
   prop0:uint;
   prop1:ushort;
 }
+
 table Table0 {
-  prop0:;
-  prop1:Table1;
+  prop0:Struct1;
+  prop1:Table2;
   unused2:int;
   prop3:double;
   prop4:double;
-  prop5:;
+  prop5:Struct3;
   prop6:uint;
   unused7:int;
   unused8:int;
   unused9:int;
   prop10:uint;
   prop11:ubyte;
-  prop12:Table2;
+  prop12:Table4;
 }
 
 root_type Table0;
-
 file_identifier "MNST";

@@ -8,7 +8,9 @@
 namespace flatCrawler
 {
 	class TableRoot;
+	class Sequence;
 	class Table;
+	class Struct;
 
 	class Property
 	{
@@ -22,17 +24,26 @@ namespace flatCrawler
 		void from_pointer(void* data);
 
 	public:
-		const flatbuffers::Table* as_table() const;
-		bool is_valid_table() const;
+		const flatbuffers::Table* as_fbtable() const;
+		bool is_valid_fbtable() const;
 
 		void guess_type();
+
+	public:
+		virtual bool is_property() const { return base_type != flatbuffers::ElementaryType::ET_SEQUENCE; }
+		virtual bool is_sequence() const { return false; }
+
+		virtual void write_schema(SchemaWriter& writer) { };
+
+	public:
+		Sequence& as_sequence();
 
 	public:
 		// Int by default
 		flatbuffers::ElementaryType base_type = flatbuffers::ElementaryType::ET_INT;
 		flatbuffers::SequenceType sequence_type = flatbuffers::SequenceType::ST_TABLE;
 		bool is_flexbuffer = false;
-		bool is_unknown_property = true;
+		bool is_unused = true;
 
 	public:
 		size_t field_size = 0;
@@ -40,6 +51,5 @@ namespace flatCrawler
 		void* data = nullptr;
 
 		TableRoot& root;
-		Table* table_value = nullptr;
 	};
 }

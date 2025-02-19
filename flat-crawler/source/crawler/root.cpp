@@ -33,7 +33,7 @@ namespace flatCrawler
 	bool TableRoot::read()
 	{
 		set_size_prefix();
-		if (!is_valid_table()) return false;
+		if (!is_valid_fbtable()) return false;
 
 		bool success = Table::read();
 		if (success)
@@ -56,7 +56,7 @@ namespace flatCrawler
 	void TableRoot::write_schema(SchemaWriter& writer)
 	{
 		Table::write_schema(writer);
-		writer.set_root_table(m_table_name);
+		writer.set_root_table(m_seq_name);
 
 		if (has_identifier)
 		{

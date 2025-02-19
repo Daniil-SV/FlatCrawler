@@ -7,7 +7,7 @@ namespace flatCrawler
 	{
 		using namespace flatbuffers;
 
-		auto table = as_table();
+		auto table = as_fbtable();
 		vtable = table->GetVTable();
 
 		auto vtable_size = flatbuffers::ReadScalar<uint16_t>(vtable);
@@ -19,14 +19,16 @@ namespace flatCrawler
 			(sizeof(uint16_t) * 2))) // vtable size also includes its bytes, so we subtract it from there
 			/ sizeof(uint16_t);		// and divide by offset size (int16) to get vtable properties count
 
+		std::vector<Property> raw_properties;
 		properties.reserve(prop_count);
+		raw_properties.reserve(prop_count);
 
 		// First of all, gathering vtable offsets
 		{
 			voffset_t offset = 4;
 			for (size_t i = 0; prop_count > i; i++)
 			{
-				Property& prop = properties.emplace_back(root);
+				Property& prop = raw_properties.emplace_back(root);
 				prop.field_offset = table->GetOptionalFieldOffset(offset);
 				prop.from_pointer(vtable_end + prop.field_offset);
 				offset += sizeof(voffset_t);
@@ -34,13 +36,13 @@ namespace flatCrawler
 		}
 
 		// Then, we need to calculate size of each field
-		for (Property& prop : properties)
+		for (Property& prop : raw_properties)
 		{
 			if (!prop.field_offset) continue;
 
 			// Searching for closest greather offset
 			voffset_t closest_offset = 0;
-			for (Property& other : properties)
+			for (Property& other : raw_properties)
 			{
 				if (other.field_offset > prop.field_offset && (closest_offset == 0 || other.field_offset < closest_offset)) {
 					closest_offset = other.field_offset;
@@ -58,87 +60,88 @@ namespace flatCrawler
 		}
 
 		// and the last act, a quiz to guess the types
-		for (Property& prop : properties)
+		for (Property& prop : raw_properties)
 		{
 			prop.guess_type();
 		}
 
-		set_table_id(root.table_counter++);
-		return produce_child_tables();
+		// Copy raw propeties
+		for (Property& prop : raw_properties)
+		{
+			if (prop.is_property())
+			{
+				properties.push_back(wk::CreateRef<Property>(prop));
+			}
+			else
+			{
+				wk::Ref<Sequence> result;
+				if (prop.sequence_type == flatbuffers::SequenceType::ST_TABLE)
+				{
+					result = wk::CreateRef<Table>(prop);
+				}
+				else if (prop.sequence_type == flatbuffers::SequenceType::ST_STRUCT)
+				{
+					result = wk::CreateRef<Struct>(prop);
+				}
+				else
+				{
+					assert(0);
+				}
+
+				properties.push_back(result);
+			}
+		}
+
+		return Sequence::read() && produce_childrens();
 	}
 
 	void Table::write_schema(SchemaWriter& writer)
 	{
-		// Writing children tables first
-		for (Property& prop : properties)
+		// Calling children schema writing first
+		for (auto& prop : properties)
 		{
-			if (prop.table_value)
-			{
-				prop.table_value->write_schema(writer);
-			}
+			prop->write_schema(writer);
 		}
 
-		writer.begin_table(m_table_name);
+		writer.begin_table_seq(m_seq_name);
 		for (size_t i = 0; properties.size() > i; i++)
 		{
-			Property& prop = properties[i];
-			std::string prop_name = prop.is_unknown_property ? "unused" : "prop";
+			auto& prop = properties[i];
+			std::string prop_name = prop->is_unused ? "unused" : "prop";
 			prop_name += std::to_string(i);
 		
 			std::string prop_typename = "";
 		
-			if (prop.base_type == flatbuffers::ElementaryType::ET_SEQUENCE)
+			if (prop->is_property())
 			{
-				switch (prop.sequence_type)
-				{
-				case flatbuffers::SequenceType::ST_TABLE:
-				{
-					if (prop.table_value)
-					{
-						prop_typename = prop.table_value->m_table_name;
-					}
-				}
-				case flatbuffers::SequenceType::ST_STRUCT:
-				{
-
-				}
-				default:
-					break;
-				}
-				
+				prop_typename = SchemaWriter::GetTypename(
+					prop->is_unused ?
+					flatbuffers::ElementaryType::ET_INT : prop->base_type
+				);
 			}
 			else
 			{
-				prop_typename = SchemaWriter::GetTypename(
-					prop.is_unknown_property ? 
-						flatbuffers::ElementaryType::ET_INT : prop.base_type
-				);
+				Sequence& seq = prop->as_sequence();
+				prop_typename = seq.m_seq_name;
 			}
 		
 			writer.write_property(prop_name, prop_typename);
 		}
 		
-		writer.end_table();
+		writer.end_seq();
 	}
 
-	bool Table::produce_child_tables()
+	bool Table::produce_childrens()
 	{
-		for (Property& prop : properties)
+		for (auto& prop : properties)
 		{
-			if (prop.base_type == flatbuffers::ElementaryType::ET_SEQUENCE && prop.sequence_type == flatbuffers::SequenceType::ST_TABLE)
+			if (prop->is_sequence())
 			{
-				prop.table_value = new Table(root);
-				prop.table_value->from_pointer(prop.data);
-				if (!prop.table_value->read()) return false;
+				Sequence& seq = prop->as_sequence();
+				if (!seq.read()) return false;
 			}
 		}
 
 		return true;
-	}
-
-	void Table::set_table_id(uint32_t id)
-	{
-		m_table_id = id;
-		m_table_name = "Table" + std::to_string(id);
 	}
 }

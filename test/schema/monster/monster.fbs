@@ -39,5 +39,5 @@ table Weapon {
 }
 
 
-file_identifier "MNST";
 root_type Monster;
+file_identifier "MNST";

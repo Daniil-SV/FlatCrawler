@@ -24,15 +24,10 @@ namespace flatCrawler
 
 	Property::Property(TableRoot& _root) : root(_root)
 	{
-
 	}
 
 	Property::~Property()
 	{
-		if (table_value)
-		{
-			delete table_value;
-		}
 	}
 
 	void Property::from_pointer(void* _data)
@@ -40,16 +35,16 @@ namespace flatCrawler
 		data = _data;
 	}
 
-	const flatbuffers::Table* Property::as_table() const
+	const flatbuffers::Table* Property::as_fbtable() const
 	{
 		if (!data) return nullptr;
 
 		return flatbuffers::GetRoot<flatbuffers::Table>(data);
 	}
 
-	bool Property::is_valid_table() const
+	bool Property::is_valid_fbtable() const
 	{
-		auto table = as_table();
+		auto table = as_fbtable();
 		flatbuffers::Verifier verifier((const uint8_t*)root.data, root.buffer.size());
 		return table->VerifyTableStart(verifier);
 	}
@@ -58,7 +53,7 @@ namespace flatCrawler
 	{
 		if (!field_size) return;
 
-		auto table = as_table();
+		auto table = as_fbtable();
 		
 		switch (field_size)
 		{
@@ -90,7 +85,7 @@ namespace flatCrawler
 			{
 				uint32_t value = flatbuffers::ReadScalar<uint32_t>(data);
 				
-				if (is_valid_table())
+				if (is_valid_fbtable())
 				{
 					base_type = flatbuffers::ElementaryType::ET_SEQUENCE;
 					sequence_type = flatbuffers::SequenceType::ST_TABLE;
@@ -121,6 +116,13 @@ namespace flatCrawler
 			break;
 		}
 
-		is_unknown_property = false;
+		is_unused = false;
+	}
+
+	Sequence& Property::as_sequence()
+	{
+		if (!is_sequence()) { assert(0); };
+
+		return *(Sequence*)this;
 	}
 }

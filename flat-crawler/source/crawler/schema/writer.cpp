@@ -44,14 +44,19 @@ namespace flatCrawler
 		}
 	}
 
-	void SchemaWriter::begin_table(const std::string& name)
+	void SchemaWriter::begin_table_seq(const std::string& name)
 	{
 		m_file << "table " << name << " {" << std::endl;
 	}
 
-	void SchemaWriter::end_table()
+	void SchemaWriter::begin_struct_seq(const std::string& name)
 	{
-		m_file << "}" << std::endl;
+		m_file << "struct " << name << " {" << std::endl;
+	}
+
+	void SchemaWriter::end_seq()
+	{
+		m_file << "}" << std::endl << std::endl;
 	}
 
 	void SchemaWriter::write_property(const std::string& name, const std::string& type)
@@ -59,13 +64,24 @@ namespace flatCrawler
 		m_file << "  " << name << ":" << type << ";" << std::endl;
 	}
 
+	void SchemaWriter::write_vector_property(const std::string& name, const std::string& type, size_t count)
+	{
+		m_file << "  " << name << ":[" << type;
+		if (count)
+		{
+			m_file << ":" << count;
+		}
+
+		m_file << "];" << std::endl;
+	}
+
 	void SchemaWriter::set_root_table(const std::string& name)
 	{
-		m_file << std::endl << "root_type " << name << ";" << std::endl;
+		m_file << "root_type " << name << ";" << std::endl;
 	}
 
 	void SchemaWriter::set_identifier(const std::string& name)
 	{
-		m_file << std::endl << "file_identifier \"" << name << "\";" << std::endl;
+		m_file << "file_identifier \"" << name << "\";" << std::endl;
 	}
 }

@@ -1,12 +1,14 @@
 #pragma once
 
-#include "types/table.h"
+#include "sequence/table.h"
+#include "sequence/struct.h"
 
 namespace flatCrawler
 {
 	class TableRoot : public Table
 	{
 		friend Table;
+		friend Sequence;
 	public:
 		TableRoot();
 
@@ -19,11 +21,12 @@ namespace flatCrawler
 		void set_size_prefix();
 
 	public:
+		bool size_prefixed = false;
 		bool has_identifier = false;
 		std::array<char, flatbuffers::kFileIdentifierLength> identifier = { '\0', '\0', '\0', '\0' };
 		std::vector<uint8_t> buffer;
 
 	protected:
-		uint32_t table_counter = 0;
+		uint32_t sequence_counter = 0;
 	};
 }

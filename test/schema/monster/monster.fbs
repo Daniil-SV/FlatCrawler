@@ -4,7 +4,7 @@ namespace MyGame.Sample;
 
 enum Color:byte { Red = 0, Green, Blue = 2 }
 
-union Equipment { Weapon } // Optionally add more tables.
+union Equipment { Weapon, Item } // Optionally add more tables.
 
 table Clan
 {
@@ -38,6 +38,12 @@ table Weapon {
   damage:short;
 }
 
+table Item
+{
+  name: string;
+  description: string;
+  usage: string;
+}
 
 root_type Monster;
 file_identifier "MNST";

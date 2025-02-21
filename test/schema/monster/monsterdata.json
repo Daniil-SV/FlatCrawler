@@ -15,7 +15,7 @@
     "z": 6.0
   },
   "hp": 10000000,
-  "stamina": 150.5,
+  "stamina": 150.555555555,
   "name": "Orc",
   "weapons": [
     {
@@ -27,9 +27,10 @@
       "damage": 90
     }
   ],
-  "equipped_type": "Weapon",
-  "equipped": {
-    "name": "bow",
-    "damage": 90
-  }
+   "equipped_type": "Weapon",
+   "equipped": {
+     "name": "bow",
+     "damage": 90
+   },
+  "inventory": [23, 255, 255, 23, 255, 76]
 }

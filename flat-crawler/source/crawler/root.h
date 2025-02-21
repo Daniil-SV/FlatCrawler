@@ -2,6 +2,7 @@
 
 #include "sequence/table.h"
 #include "sequence/struct.h"
+#include "sequence/vector.h"
 
 namespace flatCrawler
 {
@@ -13,7 +14,7 @@ namespace flatCrawler
 		TableRoot();
 
 	public:
-		void from_file(const std::filesystem::path& path);
+		void from_file(const std::filesystem::path& path, int offset = 0);
 		virtual bool read() override;
 		virtual void write_schema(SchemaWriter& writer) override;
 
@@ -25,6 +26,7 @@ namespace flatCrawler
 		bool has_identifier = false;
 		std::array<char, flatbuffers::kFileIdentifierLength> identifier = { '\0', '\0', '\0', '\0' };
 		std::vector<uint8_t> buffer;
+		wk::Ref<flatbuffers::SizeVerifier> verifier;
 
 	protected:
 		uint32_t sequence_counter = 0;

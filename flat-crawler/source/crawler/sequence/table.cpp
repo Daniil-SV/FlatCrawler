@@ -40,22 +40,30 @@ namespace flatCrawler
 		{
 			if (!prop.field_offset) continue;
 
-			// Searching for closest greather offset
-			voffset_t closest_offset = 0;
+			voffset_t begin_offset = 0;
+			voffset_t end_offset = 0;
 			for (Property& other : raw_properties)
 			{
-				if (other.field_offset > prop.field_offset && (closest_offset == 0 || other.field_offset < closest_offset)) {
-					closest_offset = other.field_offset;
+				if (other.field_offset < prop.field_offset && other.field_offset > begin_offset) {
+					begin_offset = other.field_offset;
+				}
+
+				if (other.field_offset > prop.field_offset && (end_offset == 0 || other.field_offset < end_offset)) {
+					end_offset = other.field_offset;
 				}
 			}
 
-			if (closest_offset)
+			if (end_offset)
 			{
-				prop.field_size = std::abs(closest_offset - prop.field_offset);
+				prop.field_size = std::abs(end_offset - prop.field_offset);
+			}
+			else if (begin_offset)
+			{
+				prop.field_size = vtable_data_size - prop.field_offset;
 			}
 			else
 			{
-				prop.field_size = vtable_data_size - prop.field_offset;
+				prop.field_size = prop.field_offset;
 			}
 		}
 
@@ -68,28 +76,7 @@ namespace flatCrawler
 		// Copy raw propeties
 		for (Property& prop : raw_properties)
 		{
-			if (prop.is_property())
-			{
-				properties.push_back(wk::CreateRef<Property>(prop));
-			}
-			else
-			{
-				wk::Ref<Sequence> result;
-				if (prop.sequence_type == flatbuffers::SequenceType::ST_TABLE)
-				{
-					result = wk::CreateRef<Table>(prop);
-				}
-				else if (prop.sequence_type == flatbuffers::SequenceType::ST_STRUCT)
-				{
-					result = wk::CreateRef<Struct>(prop);
-				}
-				else
-				{
-					assert(0);
-				}
-
-				properties.push_back(result);
-			}
+			properties.push_back(from_fbtype(prop));
 		}
 
 		return Sequence::read() && produce_childrens();
@@ -107,25 +94,19 @@ namespace flatCrawler
 		for (size_t i = 0; properties.size() > i; i++)
 		{
 			auto& prop = properties[i];
-			std::string prop_name = prop->is_unused ? "unused" : "prop";
+			auto type = prop->get_basetype();
+			std::string prop_name = type == PropType::Type::Unknown ? "unused" : "prop";
 			prop_name += std::to_string(i);
 		
-			std::string prop_typename = "";
-		
-			if (prop->is_property())
+			std::string prop_typename = prop->get_basetype_name();
+			if (prop->is_vector_type())
 			{
-				prop_typename = SchemaWriter::GetTypename(
-					prop->is_unused ?
-					flatbuffers::ElementaryType::ET_INT : prop->base_type
-				);
+				writer.write_vector_property(prop_name, prop_typename);
 			}
 			else
 			{
-				Sequence& seq = prop->as_sequence();
-				prop_typename = seq.m_seq_name;
+				writer.write_property(prop_name, prop_typename);
 			}
-		
-			writer.write_property(prop_name, prop_typename);
 		}
 		
 		writer.end_seq();
@@ -133,8 +114,9 @@ namespace flatCrawler
 
 	bool Table::produce_childrens()
 	{
-		for (auto& prop : properties)
+		for (size_t i = 0; properties.size() > i; i++)
 		{
+			auto& prop = properties[i];
 			if (prop->is_sequence())
 			{
 				Sequence& seq = prop->as_sequence();

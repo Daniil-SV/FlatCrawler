@@ -7,6 +7,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(WorkshopCore)
 
+FetchContent_Declare(
+    is_utf8
+    GIT_REPOSITORY https://github.com/simdutf/is_utf8.git
+    GIT_TAG v1.4.1
+)
+FetchContent_MakeAvailable(is_utf8)
+
 include(WkArgsparse)
 include(WkFlatbuffers)
 
@@ -24,7 +31,7 @@ set_target_properties(${TARGET} PROPERTIES
 
 target_include_directories(${TARGET} PUBLIC source)
 
-target_link_libraries(${TARGET} PRIVATE wk::core)
+target_link_libraries(${TARGET} PRIVATE wk::core is_utf8)
 
 wk_project_setup(${TARGET})
 wk_include_argparse()

@@ -61,12 +61,12 @@ namespace flatCrawler
 
 	void SchemaWriter::write_property(const std::string& name, const std::string& type)
 	{
-		m_file << "  " << name << ":" << type << ";" << std::endl;
+		m_file << "  " << name << ": " << type << ";" << std::endl;
 	}
 
 	void SchemaWriter::write_vector_property(const std::string& name, const std::string& type, size_t count)
 	{
-		m_file << "  " << name << ":[" << type;
+		m_file << "  " << name << ": [" << type;
 		if (count)
 		{
 			m_file << ":" << count;

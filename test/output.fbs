@@ -1,34 +1,43 @@
 struct Struct1 {
-  unk_data:[ubyte:12];
+  unk_data: [ubyte:12];
 }
 
 table Table2 {
-  prop0:uint;
+  prop0: string;
 }
 
 struct Struct3 {
-  unk_data:[ubyte:12];
+  unk_data: [ubyte:12];
 }
 
-table Table4 {
-  prop0:uint;
-  prop1:ushort;
+struct Struct4 {
+  unk_data: [ubyte:12];
+}
+
+table Table5 {
+  prop0: string;
+  prop1: ushort;
+}
+
+table Table6 {
+  prop0: string;
+  prop1: ushort;
 }
 
 table Table0 {
-  prop0:Struct1;
-  prop1:Table2;
-  unused2:int;
-  prop3:double;
-  prop4:double;
-  prop5:Struct3;
-  prop6:uint;
-  unused7:int;
-  unused8:int;
-  unused9:int;
-  prop10:uint;
-  prop11:ubyte;
-  prop12:Table4;
+  prop0: Struct1;
+  prop1: Table2;
+  unused2: int;
+  prop3: long;
+  prop4: Struct3;
+  prop5: Struct4;
+  prop6: string;
+  unused7: int;
+  prop8: uint;
+  unused9: int;
+  prop10: [Table5];
+  prop11: ubyte;
+  prop12: Table6;
 }
 
 root_type Table0;

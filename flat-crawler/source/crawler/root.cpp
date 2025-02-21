@@ -8,15 +8,19 @@ namespace flatCrawler
 	{
 	}
 
-	void TableRoot::from_file(const std::filesystem::path& path)
+	void TableRoot::from_file(const std::filesystem::path& path, int offset)
 	{
 		wk::InputFileStream file(path);
 		if (!file.is_open()) throw wk::Exception("Failed to open file %s", path.string().c_str());
 
-		buffer.resize(file.length());
-		file.read(buffer.data(), file.length());
+		size_t length = file.length() - offset;
+		buffer.resize(length);
+
+		file.seek(offset);
+		file.read(buffer.data(), length);
 
 		data = buffer.data();
+		verifier = wk::CreateRef<flatbuffers::SizeVerifier>((const uint8_t*)data, buffer.size());
 	}
 
 	void TableRoot::set_size_prefix()
@@ -41,8 +45,9 @@ namespace flatCrawler
 			// virtual table should start right after offset to it, 
 			// but sometimes this may not be the case, and this means that most likely there is some data between them, like an identifier
 			uint8_t* vtable_begin = (uint8_t*)data + sizeof(uint32_t);
+			ptrdiff_t distance = vtable - vtable_begin;
 
-			if (vtable_begin != vtable)
+			if (distance >= 4)
 			{
 				// copy identifier chars to array
 				has_identifier = true;
